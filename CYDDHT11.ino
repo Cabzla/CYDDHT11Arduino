@@ -1,3 +1,12 @@
+/*
+  LVGL Temperature and Humidity Monitor
+  
+  Author: Cabzla (https://github.com/Cabzla)
+  
+  Description:
+  This Arduino project utilizes LVGL (Light and Versatile Graphics Library) to create a temperature and humidity monitor with a DHT11 sensor and a cheap yellow TFT display. It provides real-time temperature and humidity readings along with live charts for visual representation.
+*/
+
 #include <TFT_eSPI.h>
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -78,6 +87,7 @@ void loop() {
   }
 }
 
+// Updates sensor readings
 void update_sensor_readings() {
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
@@ -87,9 +97,9 @@ void update_sensor_readings() {
     return;
   }
 
-  char tempStr[10]; // Platz für die Temperatur als String
-  char humidStr[10]; // Platz für die Luftfeuchtigkeit als String
-  // Temperatur und Luftfeuchtigkeit in Strings umwandeln
+  char tempStr[10]; // Placeholder for temperature as a string
+  char humidStr[10]; // Placeholder for humidity as a string
+  // Convert temperature and humidity to strings
   dtostrf(temperature, 4, 2, tempStr);
   dtostrf(humidity, 4, 2, humidStr);
 
@@ -97,11 +107,12 @@ void update_sensor_readings() {
   lv_label_set_text_fmt(temp_label, "Temp: %s C", tempStr);
   lv_label_set_text_fmt(humid_label, "Humidity: %s %%", humidStr);
 
-    // Update max/min labels and chart
+  // Update max/min labels and chart
   lv_chart_set_next_value(chart, ser1, temperature);
   lv_chart_set_next_value(chart, ser2, humidity);
 }
 
+// Creates the user interface
 void create_ui() {
   // Create temperature and humidity labels
   temp_label = lv_label_create(lv_scr_act());
@@ -110,17 +121,18 @@ void create_ui() {
 
   humid_label = lv_label_create(lv_scr_act());
   lv_label_set_text(humid_label, "Humidity: -- %");
-  lv_obj_align(humid_label, LV_ALIGN_TOP_LEFT, 10, 10);
+  lv_obj_align(humid_label, LV_ALIGN_TOP_LEFT, 150, 10);
 
   // Create chart for 24-hour temperature and humidity values
   chart = lv_chart_create(lv_scr_act());
   lv_obj_set_size(chart, 200, 150);
-  lv_obj_align(chart, LV_ALIGN_TOP_RIGHT, -10, 10);
+  lv_obj_align(chart, LV_ALIGN_TOP_RIGHT, -60, 50);
   lv_chart_set_type(chart, LV_CHART_TYPE_LINE); 
   ser1 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
   ser2 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_PRIMARY_Y);
 }
 
+// Flushes the display buffer
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) {
   uint32_t w = (area->x2 - area->x1 + 1);
   uint32_t h = (area->y2 - area->y1 + 1);
@@ -133,15 +145,16 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
   lv_disp_flush_ready(disp);
 }
 
+// Reads touchpad input
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
   if (digitalRead(XPT2046_IRQ) == LOW) {
-TS_Point p = ts.getPoint();
-if (p.z > 0) {
-data->state = LV_INDEV_STATE_PR;
-data->point.x = p.x;
-data->point.y = p.y;
-}
-} else {
-data->state = LV_INDEV_STATE_REL;
-}
+    TS_Point p = ts.getPoint();
+    if (p.z > 0) {
+      data->state = LV_INDEV_STATE_PR;
+      data->point.x = p.x;
+      data->point.y = p.y;
+    }
+  } else {
+    data->state = LV_INDEV_STATE_REL;
+  }
 }
